@@ -1,0 +1,152 @@
+{
+  "info": {
+    "_postman_id": "55834fc5-dcc2-47bc-bbc7-15899d578941",
+    "name": "API-Gateway",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "56655448"
+  },
+  "item": [
+    {
+      "name": "Register - successful",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {\r\n    pm.response.to.have.status(201);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\nconst json = pm.response.json();\r\n\r\npm.test(\"Response contains correct email\", function () {\r\n    pm.expect(json.email).to.eql(pm.collectionVariables.get(\"testEmail\"));\r\n});\r\n\r\npm.test(\"Response contains correct full name\", function () {\r\n    pm.expect(json.fullName).to.eql(\"Test User\");\r\n});\r\n\r\npm.test(\"New users are assigned User role\", function () {\r\n    pm.expect(json.role).to.eql(\"User\");\r\n});\r\n\r\npm.test(\"Response contains createdDate\", function () {\r\n    pm.expect(json.createdDate).to.exist;\r\n});\r\n\r\npm.test(\"Password hash is not exposed\", function () {\r\n    pm.expect(json).to.not.have.property(\"passwordHash\");\r\n});"
+            ]
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const email = `test-${Date.now()}@example.com`;\r\n\r\npm.collectionVariables.set(\"testEmail\", email);\r\npm.collectionVariables.set(\"testPassword\", \"Password123!\");"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"{{testEmail}}\",\r\n    \"password\": \"{{testPassword}}\",\r\n    \"fullName\": \"Test User\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login - successful",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\nconst json = pm.response.json();\r\n\r\npm.test(\"Response contains JWT\", function () {\r\n    pm.expect(json.token).to.exist;\r\n    pm.expect(json.token).to.be.a(\"string\");\r\n    pm.expect(json.token.length).to.be.greaterThan(0);\r\n});\r\n\r\npm.test(\"Response contains expiry\", function () {\r\n    pm.expect(json.expires).to.exist;\r\n});\r\n\r\npm.test(\"Response contains user information\", function () {\r\n    pm.expect(json.user).to.exist;\r\n    pm.expect(json.user.email).to.exist;\r\n    pm.expect(json.user.fullName).to.exist;\r\n    pm.expect(json.user.role).to.exist;\r\n});\r\n\r\npm.test(\"Correct user was authenticated\", function () {\r\n    pm.expect(json.user.email)\r\n        .to.eql(pm.collectionVariables.get(\"testEmail\"));\r\n\r\n    pm.expect(json.user.fullName)\r\n        .to.eql(\"Test User\");\r\n\r\n    pm.expect(json.user.role)\r\n        .to.eql(\"User\");\r\n});\r\n\r\n\r\n//save token for future requests\r\nif (pm.response.code === 200) {\r\n    const json = pm.response.json();\r\n\r\n    pm.collectionVariables.set(\r\n        \"authToken\",\r\n        json.token\r\n    );\r\n}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"{{testEmail}}\",\r\n    \"password\": \"{{testPassword}}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get weather forecast",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {\r\n    pm.response.to.have.status(200);\r\n});\r\n\r\npm.test(\"Response is JSON\", function () {\r\n    pm.response.to.be.json;\r\n});\r\n\r\nconst json = pm.response.json();\r\n\r\npm.test(\"Response contains exactly 5 forecasts\", function () {\r\n    pm.expect(json).to.be.an(\"array\");\r\n    pm.expect(json.length).to.eql(5);\r\n});\r\n\r\npm.test(\"Each forecast contains the required properties\", function () {\r\n    json.forEach(function (forecast) {\r\n        pm.expect(forecast).to.have.property(\"date\");\r\n        pm.expect(forecast).to.have.property(\"temperatureC\");\r\n        pm.expect(forecast).to.have.property(\"summary\");\r\n    });\r\n});\r\n\r\npm.test(\"Temperatures are within the expected range\", function () {\r\n    json.forEach(function (forecast) {\r\n        pm.expect(forecast.temperatureC).to.be.at.least(-20);\r\n        pm.expect(forecast.temperatureC).to.be.below(55);\r\n    });\r\n});\r\n\r\npm.test(\"Summaries contain valid values\", function () {\r\n    const validSummaries = [\r\n        \"Freezing\",\r\n        \"Bracing\",\r\n        \"Chilly\",\r\n        \"Cool\",\r\n        \"Mild\",\r\n        \"Warm\",\r\n        \"Balmy\",\r\n        \"Hot\",\r\n        \"Sweltering\",\r\n        \"Scorching\"\r\n    ];\r\n\r\n    json.forEach(function (forecast) {\r\n        pm.expect(validSummaries).to.include(forecast.summary);\r\n    });\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{authToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/weatherforecast",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "weatherforecast"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "bearer_token_0xoe",
+      "secret": true
+    },
+    {
+      "key": "json_web_token_1385",
+      "secret": true
+    },
+    {
+      "key": "testEmail",
+      "value": ""
+    },
+    {
+      "key": "testPassword",
+      "value": ""
+    },
+    {
+      "key": "authToken",
+      "value": ""
+    }
+  ]
+}

@@ -13,7 +13,6 @@ namespace api_gateway
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
@@ -31,7 +30,7 @@ namespace api_gateway
                 return tableClient;
             });
 
-
+            //add and configure authentication middleware
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
              .AddJwtBearer(options =>
              {
@@ -51,6 +50,7 @@ namespace api_gateway
                  };
              });
 
+            //add authorisation middleware
             builder.Services.AddAuthorization();
 
             var app = builder.Build();
@@ -61,8 +61,11 @@ namespace api_gateway
                 app.MapOpenApi();
             }
 
+            //In the next few lines we activate the various middleware
+            //activate https middleware
             app.UseHttpsRedirection();
 
+            //activate authentication and authorisation middleware
             app.UseAuthentication();
             app.UseAuthorization();
 

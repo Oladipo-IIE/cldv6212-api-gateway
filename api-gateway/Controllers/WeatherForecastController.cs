@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace api_gateway.Controllers
 {
+    //user must be authorised to access any route in this controller
     [Authorize]
     [ApiController]
     [Route("[controller]")]
