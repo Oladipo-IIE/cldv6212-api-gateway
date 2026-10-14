@@ -17,6 +17,11 @@ namespace api_gateway
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
+            //add swagger
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen();
+
+
             var ConnectionString = builder.Configuration.GetConnectionString("AzureStorage");
 
             builder.Services.AddSingleton(sp =>
@@ -51,7 +56,18 @@ namespace api_gateway
              });
 
             //add authorisation middleware
-            builder.Services.AddAuthorization();
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("authenticated", policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                });
+            });
+
+            //register yarp
+            builder.Services.AddReverseProxy()
+                .LoadFromConfig(
+                 builder.Configuration.GetSection("ReverseProxy"));
 
             var app = builder.Build();
 
@@ -69,7 +85,28 @@ namespace api_gateway
             app.UseAuthentication();
             app.UseAuthorization();
 
+            //use swagger middleware
+            app.UseSwagger();
+
+            app.UseSwaggerUI(options =>
+            {
+                // Gateway's own API documentation
+                options.SwaggerEndpoint(
+                    "/swagger/v1/swagger.json",
+                    "API Gateway");
+
+                // Notes microservice documentation
+                options.SwaggerEndpoint(
+                    "/docs/notes/openapi.json",
+                    "Notes Microservice");
+            });
+
+
             app.MapControllers();
+
+            // Map YARP routes
+            app.MapReverseProxy();
+
 
             app.Run();
         }
